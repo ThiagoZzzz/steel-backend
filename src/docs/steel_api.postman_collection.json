@@ -1,0 +1,590 @@
+{
+  "info": {
+    "name": "STEEL E-Commerce API",
+    "description": "Colección completa de la API REST de STEEL.\n\n## Configuración rápida\n1. Ejecutá **Login** para obtener el token JWT.\n2. El token y el userId se guardan automáticamente en las variables de colección.\n3. Todos los requests protegidos lo usan de forma automática.\n\n## Organización\nLos requests están agrupados por **rol requerido** y dentro de cada carpeta ordenados por verbo HTTP: GET → PATCH → POST → DELETE.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+
+    {
+      "name": "🔓 Público · Auth",
+      "description": "Endpoints de autenticación sin requerir token JWT.",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan\",\n  \"lastName\": \"Pérez\",\n  \"email\": \"juan@email.com\",\n  \"password\": \"Segura123!\",\n  \"confirmPassword\": \"Segura123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/sign-up",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "sign-up"]
+            },
+            "description": "Crea una nueva cuenta de usuario. Rol por defecto: `[\"user\"]`. No requiere autenticación."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('userId', response.data.id);",
+                  "    pm.test('Usuario registrado correctamente', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.data).to.have.property('id');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"juan@email.com\",\n  \"password\": \"Segura123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica al usuario y devuelve un JWT. El token y el userId se guardan automáticamente como variables de colección."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.data.token);",
+                  "    pm.collectionVariables.set('userId', response.data.user.id);",
+                  "    pm.test('Login exitoso — token guardado', () => {",
+                  "        pm.expect(response.data.token).to.be.a('string');",
+                  "        pm.expect(response.data.user).to.have.property('id');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🔓 Público · Products",
+      "description": "Consulta del catálogo de productos. No requiere autenticación.",
+      "item": [
+        {
+          "name": "Listar productos",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/products/",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ""]
+            },
+            "description": "Devuelve todos los productos del catálogo. No requiere autenticación."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data.products && response.data.products.length > 0) {",
+                  "        pm.collectionVariables.set('productId', response.data.products[0].id);",
+                  "    }",
+                  "    pm.test('Catálogo obtenido correctamente', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.data.products).to.be.an('array');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener producto por ID",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "noauth" },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Obtiene un producto específico por su UUID. No requiere autenticación."
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🔑 User · Auth",
+      "description": "Gestión de credenciales propias. Requiere JWT con rol user.",
+      "item": [
+        {
+          "name": "Cambiar contraseña",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"NuevaSegura456!\",\n  \"confirmPassword\": \"NuevaSegura456!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "password", "{{userId}}"]
+            },
+            "description": "Actualiza la contraseña del usuario autenticado. Solo el dueño puede cambiarla (`verifyOwnership`). La nueva contraseña no puede ser igual a la anterior."
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🔑 User · Profile",
+      "description": "Consulta y edición del perfil propio. Requiere JWT con rol user + verifyOwnership.",
+      "item": [
+        {
+          "name": "Obtener mi perfil",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Obtiene el perfil del usuario autenticado. Solo puede ver su propio perfil (`verifyOwnership`)."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener mis órdenes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "orders"]
+            },
+            "description": "Devuelve todas las órdenes del usuario autenticado. Solo puede ver sus propias órdenes (`verifyOwnership`)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data.orders && response.data.orders.length > 0) {",
+                  "        pm.collectionVariables.set('orderId', response.data.orders[0].id);",
+                  "    }",
+                  "    pm.test('Órdenes del usuario obtenidas', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.data.orders).to.be.an('array');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar datos personales",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"NuevoNombre\",\n  \"lastName\": \"NuevoApellido\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Actualiza name, lastName y/o email del usuario. También puede cambiar contraseña enviando `password` y `confirmPassword`. Solo el dueño puede editarse (`verifyOwnership`)."
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🔑 User · Orders",
+      "description": "Gestión de órdenes propias. Requiere JWT con rol user.",
+      "item": [
+        {
+          "name": "Obtener orden por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            },
+            "description": "Obtiene una orden por ID. Solo el dueño puede verla (`verifyOrderOwnership`). Rol user."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener items de la orden",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/items",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}", "items"]
+            },
+            "description": "Devuelve los OrderItems de una orden. Solo el dueño puede acceder (`verifyOrderOwnership`). Rol user."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.test('Items obtenidos correctamente', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.data.orderItems).to.be.an('array');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear orden con items",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"{{productId}}\",\n      \"quantity\": 2\n    }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ""]
+            },
+            "description": "Crea una nueva orden. El servidor valida los productos, calcula sub_totals y total en una transacción atómica. Solo rol user."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('orderId', response.data.order.id);",
+                  "    pm.test('Orden creada correctamente', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.data.order).to.have.property('id');",
+                  "        pm.expect(response.data.items).to.be.an('array');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin · Users",
+      "description": "Administración de usuarios. Requiere JWT con rol admin.",
+      "item": [
+        {
+          "name": "[Admin] Listar todos los usuarios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", ""]
+            },
+            "description": "Lista todos los usuarios del sistema. Requiere rol admin."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Asignar rol a usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "role"]
+            },
+            "description": "Agrega un rol al array `roles` del usuario. Ejemplo: asignar `\"admin\"` a `[\"user\"]` → `[\"user\", \"admin\"]`. Requiere rol admin."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Revocar rol de usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/revoke-role",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "revoke-role"]
+            },
+            "description": "Elimina un rol del array `roles` del usuario. Ejemplo: revocar `\"admin\"` de `[\"user\", \"admin\"]` → `[\"user\"]`. Requiere rol admin."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Eliminar usuario",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "description": "Elimina una cuenta de usuario del sistema. Requiere rol admin."
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin · Products",
+      "description": "Administración del catálogo de productos. Requiere JWT con rol admin.",
+      "item": [
+        {
+          "name": "[Admin] Crear producto",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Camiseta STEEL Premium", "type": "text" },
+                { "key": "price", "value": "4999.99", "type": "text" },
+                { "key": "stock", "value": "25", "type": "text" },
+                { "key": "description", "value": "Camiseta premium de algodón peinado con logo bordado", "type": "text" },
+                { "key": "category", "value": "camisetas", "type": "text" },
+                { "key": "discount", "value": "false", "type": "text" },
+                { "key": "featured", "value": "true", "type": "text" },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "",
+                  "description": "Seleccioná la imagen del producto (jpg, png, jpeg, webp — máx 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", ""]
+            },
+            "description": "Crea un nuevo producto. Enviar como form-data con la imagen adjunta. La imagen se sube automáticamente a Cloudinary. Flujo: parseFormData → validateSchema → uploadToCloudinary → controller. Requiere rol admin."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('productId', response.data.product.id);",
+                  "    pm.test('Producto creado correctamente', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.data.product).to.have.property('id');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[Admin] Actualizar producto",
+          "request": {
+            "method": "PATCH",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "price", "value": "5499.99", "type": "text" },
+                { "key": "featured", "value": "true", "type": "text" },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "",
+                  "description": "(Opcional) Nueva imagen del producto"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Actualiza un producto existente. Solo se cambian los campos enviados. Puede incluir una nueva imagen. Requiere rol admin."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Eliminar producto",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            },
+            "description": "Elimina un producto del catálogo. Requiere rol admin."
+          },
+          "response": []
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin · Orders",
+      "description": "Administración de todas las órdenes del sistema. Requiere JWT con rol admin.",
+      "item": [
+        {
+          "name": "[Admin] Listar todas las órdenes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ""]
+            },
+            "description": "Lista todas las órdenes del sistema. Requiere rol admin."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Actualizar orden",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"state\": \"ready\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            },
+            "description": "Actualiza el estado (`state`) y/o el total de una orden. Enviá al menos un campo. Requiere rol admin."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Eliminar orden",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            },
+            "description": "Elimina una orden del sistema. Requiere rol admin."
+          },
+          "response": []
+        }
+      ]
+    }
+
+  ]
+}
