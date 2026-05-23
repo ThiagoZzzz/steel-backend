@@ -21,6 +21,9 @@ export const verifyToken = (req, res, next) => {
 
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado.' }); // ← 401 para que el interceptor actúe
+    }
     // Si el token expiró o fue modificado jwt.verify lanza un error
     return res.status(403).json({ error: 'Token inválido o expirado.' });
   }
