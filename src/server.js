@@ -4,6 +4,7 @@ import 'dotenv/config';
 
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import { fileURLToPath } from 'url';
@@ -37,6 +38,10 @@ app.use(
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
     })
 );
+
+// cookie parser
+app.use(cookieParser());
+
 // limite de payload
 app.use(express.json({ limit: '10mb' }));
 

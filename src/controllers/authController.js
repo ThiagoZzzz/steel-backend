@@ -1,15 +1,26 @@
 import * as authService from '../services/authService.js';
 import catchAsync from '../utils/catchAsync.js';
 
+// set cookie
+const cookieOptions = {
+  httpOnly: true,     // JS del browser NO puede leerla → protege de XSS
+  secure: process.env.NODE_ENV === 'production', // solo HTTPS en prod
+  sameSite: 'strict', // protege de CSRF
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días en ms (igual que el token)
+}
+
 export const loginController = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
   const result = await authService.login(email, password);
 
+  // guardar refreshToken
+  res.cookie('refreshToken', result.refreshToken, cookieOptions);
+
   res.status(200).json({
     status: 'success',
     message: 'Inicio de sesión exitoso',
-    data: result
+    data: { token: result.token, user: result.user }
   });
 });
 
@@ -37,3 +48,15 @@ export const updateUserPasswordController = catchAsync(async (req, res) => {
     data: { user: updatedUser }
   });
 });
+
+export const refreshController = catchAsync(async (req, res) => {
+  const newTokens = await authService.refreshToken(req.cookies.refreshToken)
+
+  // guardar nuevo refreshToken
+  res.cookie('refreshToken', newTokens.refreshToken, cookieOptions)
+  res.status(200).json({
+    status: 'success',
+    message: 'Nuevos tokens obtenidos correctamente',
+    accessToken: newTokens.token
+  });
+})

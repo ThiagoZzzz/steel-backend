@@ -113,9 +113,44 @@
                   "    const response = pm.response.json();",
                   "    pm.collectionVariables.set('token', response.data.token);",
                   "    pm.collectionVariables.set('userId', response.data.user.id);",
-                  "    pm.test('Login exitoso — token guardado', () => {",
+                  "    // El refreshToken tambi\u00e9n llega en data Y como cookie httpOnly",
+                  "    pm.test('Login exitoso \u2014 token guardado', () => {",
                   "        pm.expect(response.data.token).to.be.a('string');",
+                  "        pm.expect(response.data.refreshToken).to.be.a('string');",
                   "        pm.expect(response.data.user).to.have.property('id');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "noauth" },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Renueva el access token usando el refresh token almacenado en la cookie `httpOnly` (seteada autom\u00e1ticamente en el login).\n\n**No requiere body ni Authorization header.** El navegador/Postman env\u00eda la cookie autom\u00e1ticamente.\n\n**Flujo de rotaci\u00f3n:**\n1. El servidor verifica el `refreshToken` de la cookie\n2. Genera un nuevo access token (2h) y un nuevo refresh token (7d)\n3. El nuevo refresh token se setea en la cookie (reemplaza el anterior)\n4. El nuevo access token se devuelve en `accessToken` del body\n\n**Errores:** `401` si no hay cookie, el token es inv\u00e1lido o ya expir\u00f3."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.accessToken);",
+                  "    pm.test('Access token renovado correctamente', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.accessToken).to.be.a('string');",
                   "    });",
                   "}"
                 ],

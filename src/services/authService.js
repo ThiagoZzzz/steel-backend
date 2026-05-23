@@ -36,9 +36,12 @@ export const login = async (email, password) => {
     roles: user.roles
   };
 
-  // firmar el Token
+  // generar y firmar Tokens
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
     expiresIn: '2h' // el token vence en 2 horas
+  });
+  const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: '7d' // el refresh token vence en 7 días
   });
 
   // parsear a objeto plano y eliminar el password antes de responder
@@ -48,6 +51,7 @@ export const login = async (email, password) => {
   // retornar el token y los datos del usuario
   return {
     token,
+    refreshToken,
     user: userResponse
   };
 };
@@ -110,4 +114,35 @@ export const register = async (name, lastName, email, password) => {
   return userResponse;
 };
 
-// ++ change password function
+export const refreshToken = async (oldRefreshToken) => {
+  if (!oldRefreshToken) {
+    throw new AppError('Refresh token no proporcionado.', 401);
+  }
+
+  try {
+    const decoded = jwt.verify(oldRefreshToken, process.env.JWT_REFRESH_SECRET);
+    const { id, roles } = decoded
+    const payload = { id, roles }
+
+    // generar nuevos tokens
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: '2h' // el token vence en 2 horas
+    });
+    const newRefreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+      expiresIn: '7d' // el token vence en 7 días
+    });
+
+    return {
+      token,
+      refreshToken: newRefreshToken
+    }
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      throw new AppError('Refresh token expirado.', 401);
+    }
+    if (error.name === 'JsonWebTokenError') {
+      throw new AppError('Refresh token inválido.', 401);
+    }
+    throw error;
+  }
+}

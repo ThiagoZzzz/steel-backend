@@ -5,12 +5,16 @@ info:
     API REST para la plataforma de e-commerce **STEEL**.
 
     ## Autenticación
-    La mayoría de los endpoints requieren un token JWT en el header `Authorization`.
-    Obtené tu token mediante el endpoint `POST /auth/login` y usalo así:
+    La mayoría de los endpoints requieren un **access token** JWT en el header `Authorization`:
     ```
-    Authorization: Bearer <tu_token>
+    Authorization: Bearer <tu_access_token>
     ```
-    El token expira en **2 horas**.
+    Obtené tu token mediante `POST /auth/login`. El access token expira en **2 horas**.
+
+    ## Refresh Token
+    Cuando el access token expira, usá `POST /auth/refresh` para obtener nuevos tokens sin
+    volver a ingresar credenciales. El refresh token se almacena en una cookie `httpOnly`
+    (expira en **7 días**) y se rota con cada uso.
 
     ## Roles y acceso
     | Rol | Descripción |
@@ -22,7 +26,7 @@ info:
     ## Organización
     Los endpoints están agrupados por **rol requerido**, y dentro de cada grupo
     ordenados por verbo HTTP: `GET → PATCH → POST → DELETE`.
-  version: 1.0.0
+  version: 1.1.0
   contact:
     name: STEEL Dev Team
 
@@ -432,7 +436,11 @@ paths:
     post:
       tags: ["🔓 Público · Auth"]
       summary: Iniciar sesión
-      description: Autentica al usuario y devuelve un JWT válido por 2 horas.
+      description: |
+        Autentica al usuario y devuelve:
+        - **`data.token`** — Access token JWT válido por **2 horas**
+        - **`data.refreshToken`** — Refresh token válido por **7 días** (también se setea en cookie `httpOnly`)
+        - **`data.user`** — Datos del usuario autenticado
       requestBody:
         required: true
         content:
@@ -449,6 +457,7 @@ paths:
                 message: Inicio de sesión exitoso
                 data:
                   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...(7d)"
                   user:
                     id: "550e8400-e29b-41d4-a716-446655440000"
                     name: Juan
@@ -468,6 +477,69 @@ paths:
               example:
                 status: error
                 message: Credenciales inválidas
+
+  /auth/refresh:
+    post:
+      tags: ["🔓 Público · Auth"]
+      summary: Renovar access token
+      description: |
+        Renueva el **access token** usando el **refresh token** almacenado en la
+        cookie `httpOnly` del navegador (seteada automáticamente en el login).
+
+        **Flujo de rotación:**
+        1. El servidor verifica el `refreshToken` de la cookie
+        2. Genera un nuevo **access token** (2h) y un nuevo **refresh token** (7d)
+        3. El nuevo refresh token se setea en la cookie `httpOnly` (reemplazando el anterior)
+        4. El nuevo access token se devuelve en el body
+
+        **No requiere `Authorization` header** — solo necesita la cookie `refreshToken`.
+
+        **Errores posibles:**
+        - `401` si no hay cookie, si el token es inválido o si ya expiró
+      parameters:
+        - in: cookie
+          name: refreshToken
+          required: true
+          schema:
+            type: string
+          description: Refresh token JWT (7 días). Seteado automáticamente en el login.
+      responses:
+        "200":
+          description: Nuevos tokens generados correctamente
+          headers:
+            Set-Cookie:
+              description: |
+                Nuevo refresh token en cookie `httpOnly; Secure; SameSite=Strict`.
+                Expira en 7 días.
+              schema:
+                type: string
+                example: "refreshToken=eyJ...; HttpOnly; Secure; SameSite=Strict; Max-Age=604800"
+          content:
+            application/json:
+              example:
+                status: success
+                message: Nuevos tokens obtenidos correctamente
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...(2h)"
+        "401":
+          description: Refresh token ausente, inválido o expirado
+          content:
+            application/json:
+              examples:
+                sin_token:
+                  summary: Sin cookie refreshToken
+                  value:
+                    status: error
+                    message: Refresh token no proporcionado.
+                token_expirado:
+                  summary: Token expirado
+                  value:
+                    status: error
+                    message: Refresh token expirado.
+                token_invalido:
+                  summary: Token inválido
+                  value:
+                    status: error
+                    message: Refresh token inválido.
 
   /products/:
     get:
