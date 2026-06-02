@@ -7,6 +7,15 @@ export const getAllOrders = async () => {
     });
 }
 
+export const getAllUserOrders = async (userId) => {
+    return await Order.findAll({
+        where: {
+            user_id: userId
+        },
+        raw: true
+    });
+}
+
 export const getOrderById = async (id) => {
     if (!id) {
         throw new AppError('El id es obligatorio', 400);
@@ -39,12 +48,12 @@ export const getOrderItems = async (id) => {
 }
 
 // Crea la orden completa dentro de una transacción: calcula sub_total por item y total de la orden, persiste Order + OrderItems de forma atómica
-export const createFullOrder = async ({ user_id, items }) => {
+export const createFullOrder = async ({ user_id, user_email, items, billing_details }) => {
     return await sequelize.transaction(async (t) => {
 
         // Resolver precios y calcular sub_totals en paralelo
         const resolvedItems = await Promise.all(
-            items.map(async ({ product_id, quantity }) => {
+            items.map(async ({ product_id, quantity, name }) => {
                 const product = await Product.findByPk(product_id, { transaction: t });
 
                 if (!product) {
@@ -53,6 +62,7 @@ export const createFullOrder = async ({ user_id, items }) => {
 
                 return {
                     product_id,
+                    product_name: name,
                     quantity,
                     sub_total: product.price * quantity
                 };
@@ -63,7 +73,7 @@ export const createFullOrder = async ({ user_id, items }) => {
         const total = resolvedItems.reduce((acc, item) => acc + item.sub_total, 0);
 
         // Crear la orden
-        const newOrder = await Order.create({ total, user_id }, { transaction: t });
+        const newOrder = await Order.create({ ...billing_details, total, user_id, user_email }, { transaction: t });
 
         // Crear los items asociados a la orden
         const newItems = await OrderItem.bulkCreate(

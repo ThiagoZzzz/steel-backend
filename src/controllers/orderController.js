@@ -1,5 +1,7 @@
+import { meta } from 'zod/v4/core';
 import {
   getAllOrders,
+  getAllUserOrders,
   getOrderById,
   getOrderItems,
   createFullOrder,
@@ -68,10 +70,11 @@ export const createOrderController = catchAsync(async (req, res) => {
   }
 
   const user_id = req.user.id;
+  const user_email = req.user.email;
 
   // El servicio resuelve precios desde la DB, calcula sub_totals y
   // persiste Order + OrderItems dentro de una transacción atómica.
-  const { order, items: newItems } = await createFullOrder({ user_id, items });
+  const { order, items: newItems } = await createFullOrder({ user_id, user_email, items });
 
   return res.status(201).json({
     status: 'success',

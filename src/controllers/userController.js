@@ -100,6 +100,9 @@ export const getUserOrdersController = catchAsync(async (req, res) => {
     res.status(200).json({
         status: 'success',
         message: 'Pedidos del usuario obtenidos correctamente',
-        data: { orders }
+        data: { orders },
+        meta: {
+            totalItems: orders.length
+        }
     });
 });

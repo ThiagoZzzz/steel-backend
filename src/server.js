@@ -1,5 +1,5 @@
 // ! EJECUTAR COMANDO ANTES DE LEER ARCHIVOS DE APP EN EL DOCKER PARA PARSEAR VARIABLES DE ENTORNO node -r dotenv/config server.js
-// configurar vaiables de entorno antes que inicie el server
+// configurar variables de entorno antes que inicie el server
 import 'dotenv/config';
 
 import express from 'express';

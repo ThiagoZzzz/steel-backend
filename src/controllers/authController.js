@@ -3,9 +3,9 @@ import catchAsync from '../utils/catchAsync.js';
 
 // set cookie
 const cookieOptions = {
-  httpOnly: true,     // JS del browser NO puede leerla → protege de XSS
+  httpOnly: true,
   secure: process.env.NODE_ENV === 'production', // solo HTTPS en prod
-  sameSite: 'strict', // protege de CSRF
+  sameSite: 'strict',
   maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días en ms (igual que el token)
 }
 
@@ -21,6 +21,15 @@ export const loginController = catchAsync(async (req, res) => {
     status: 'success',
     message: 'Inicio de sesión exitoso',
     data: { token: result.token, user: result.user }
+  });
+});
+
+export const logoutController = catchAsync(async (req, res) => {
+  res.clearCookie('refreshToken', cookieOptions);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Cierre de sesión exitoso'
   });
 });
 

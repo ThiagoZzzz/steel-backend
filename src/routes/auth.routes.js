@@ -1,6 +1,6 @@
 import { Router } from 'express';
 // validación de datos
-import { loginController, refreshController, registerController, updateUserPasswordController } from '../controllers/authController.js';
+import { loginController, logoutController, refreshController, registerController, updateUserPasswordController } from '../controllers/authController.js';
 import { loginSchema, registerSchema, updateUserSchema } from '../schemas/authSchemas.js';
 // middlewares
 import { validateSchema } from '../middlewares/schemaValidator.js';
@@ -11,6 +11,7 @@ const router = Router();
 // públicas
 router.post('/sign-up', validateSchema(registerSchema), registerController);
 router.post('/login', validateSchema(loginSchema), loginController);
+router.post('/logout', logoutController);
 router.post('/refresh', refreshController);
 
 // protegidas
