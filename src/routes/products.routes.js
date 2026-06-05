@@ -1,6 +1,6 @@
 import { Router } from "express";
 // controllers
-import { getAllProductsController, getProductByIdController, createProductController, updateProductController, deleteProductController } from '../controllers/productController.js';
+import { getAllProductsController, getProductByIdController, getProductBySlugController, createProductController, updateProductController, deleteProductController } from '../controllers/productController.js';
 // validación de datos
 import { validateSchema } from '../middlewares/schemaValidator.js';
 import { createProductSchema, updateProductSchema } from '../schemas/productSchemas.js';
@@ -13,6 +13,7 @@ import { parseFormData, uploadToCloudinary } from '../middlewares/uploadMedia.js
 const router = Router();
 
 router.get('/', getAllProductsController);
+router.get('/search/:slug', getProductBySlugController);
 router.get('/:id', getProductByIdController);
 // * ROL: ADMIN
 router.post('/', verifyToken, verifyRole('admin'), parseFormData.single('image'), validateSchema(createProductSchema), uploadToCloudinary, createProductController)

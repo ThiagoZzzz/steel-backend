@@ -36,13 +36,17 @@
       "type": "string"
     },
     {
+      "key": "productSlug",
+      "value": "",
+      "type": "string"
+    },
+    {
       "key": "orderId",
       "value": "",
       "type": "string"
     }
   ],
   "item": [
-
     {
       "name": "🔓 Público · Auth",
       "description": "Endpoints de autenticación sin requerir token JWT.",
@@ -51,17 +55,33 @@
           "name": "Registrar usuario",
           "request": {
             "method": "POST",
-            "auth": { "type": "noauth" },
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Juan\",\n  \"lastName\": \"Pérez\",\n  \"email\": \"juan@email.com\",\n  \"password\": \"Segura123!\",\n  \"confirmPassword\": \"Segura123!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/auth/sign-up",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "sign-up"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "sign-up"
+              ]
             },
             "description": "Crea una nueva cuenta de usuario. Rol por defecto: `[\"user\"]`. No requiere autenticación."
           },
@@ -89,19 +109,35 @@
           "name": "Login",
           "request": {
             "method": "POST",
-            "auth": { "type": "noauth" },
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"juan@email.com\",\n  \"password\": \"Segura123!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
-            "description": "Autentica al usuario y devuelve un JWT. El token y el userId se guardan automáticamente como variables de colección."
+            "description": "Autentica al usuario y devuelve un JWT en `data.token`. El refresh token se setea automáticamente como cookie `httpOnly` (no se devuelve en el body). El token y el userId se guardan automáticamente como variables de colección."
           },
           "response": [],
           "event": [
@@ -113,11 +149,49 @@
                   "    const response = pm.response.json();",
                   "    pm.collectionVariables.set('token', response.data.token);",
                   "    pm.collectionVariables.set('userId', response.data.user.id);",
-                  "    // El refreshToken tambi\u00e9n llega en data Y como cookie httpOnly",
-                  "    pm.test('Login exitoso \u2014 token guardado', () => {",
+                  "    // El refreshToken llega SOLO como cookie httpOnly (no en el body)",
+                  "    pm.test('Login exitoso — token guardado', () => {",
                   "        pm.expect(response.data.token).to.be.a('string');",
-                  "        pm.expect(response.data.refreshToken).to.be.a('string');",
                   "        pm.expect(response.data.user).to.have.property('id');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Cierra la sesión del usuario eliminando la cookie `refreshToken`. No requiere body ni Authorization header."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', '');",
+                  "    pm.test('Logout exitoso — cookie eliminada', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
                   "    });",
                   "}"
                 ],
@@ -130,14 +204,21 @@
           "name": "Refresh Token",
           "request": {
             "method": "POST",
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/auth/refresh",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "refresh"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
             },
-            "description": "Renueva el access token usando el refresh token almacenado en la cookie `httpOnly` (seteada autom\u00e1ticamente en el login).\n\n**No requiere body ni Authorization header.** El navegador/Postman env\u00eda la cookie autom\u00e1ticamente.\n\n**Flujo de rotaci\u00f3n:**\n1. El servidor verifica el `refreshToken` de la cookie\n2. Genera un nuevo access token (2h) y un nuevo refresh token (7d)\n3. El nuevo refresh token se setea en la cookie (reemplaza el anterior)\n4. El nuevo access token se devuelve en `accessToken` del body\n\n**Errores:** `401` si no hay cookie, el token es inv\u00e1lido o ya expir\u00f3."
+            "description": "Renueva el access token usando el refresh token almacenado en la cookie `httpOnly` (seteada automáticamente en el login).\n\n**No requiere body ni Authorization header.** El navegador/Postman envía la cookie automáticamente.\n\n**Flujo de rotación:**\n1. El servidor verifica el `refreshToken` de la cookie\n2. Genera un nuevo access token (2h) y un nuevo refresh token (7d)\n3. El nuevo refresh token se setea en la cookie (reemplaza el anterior)\n4. El nuevo access token se devuelve en `accessToken` del body\n\n**Errores:** `401` si no hay cookie, el token es inválido o ya expiró."
           },
           "response": [],
           "event": [
@@ -161,7 +242,6 @@
         }
       ]
     },
-
     {
       "name": "🔓 Público · Products",
       "description": "Consulta del catálogo de productos. No requiere autenticación.",
@@ -170,11 +250,18 @@
           "name": "Listar productos",
           "request": {
             "method": "GET",
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/products/",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", ""]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                ""
+              ]
             },
             "description": "Devuelve todos los productos del catálogo. No requiere autenticación."
           },
@@ -188,6 +275,7 @@
                   "    const response = pm.response.json();",
                   "    if (response.data.products && response.data.products.length > 0) {",
                   "        pm.collectionVariables.set('productId', response.data.products[0].id);",
+                  "        pm.collectionVariables.set('productSlug', response.data.products[0].slug);",
                   "    }",
                   "    pm.test('Catálogo obtenido correctamente', () => {",
                   "        pm.expect(response.status).to.equal('success');",
@@ -204,19 +292,64 @@
           "name": "Obtener producto por ID",
           "request": {
             "method": "GET",
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "url": {
               "raw": "{{baseUrl}}/products/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
             },
-            "description": "Obtiene un producto específico por su UUID. No requiere autenticación."
+            "description": "Obtiene un producto específico por su UUID. No requiere autenticación. La respuesta incluye el campo `slug` auto-generado."
           },
           "response": []
+        },
+        {
+          "name": "Obtener producto por slug",
+          "request": {
+            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/search/{{productSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "search",
+                "{{productSlug}}"
+              ]
+            },
+            "description": "Obtiene un producto específico mediante su slug SEO-friendly. No requiere autenticación."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.test('Producto obtenido correctamente por slug', () => {",
+                  "        pm.expect(response.status).to.equal('success');",
+                  "        pm.expect(response.data.product).to.have.property('slug');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
-
     {
       "name": "🔑 User · Auth",
       "description": "Gestión de credenciales propias. Requiere JWT con rol user.",
@@ -225,16 +358,31 @@
           "name": "Cambiar contraseña",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"password\": \"NuevaSegura456!\",\n  \"confirmPassword\": \"NuevaSegura456!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/auth/password/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "password", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password",
+                "{{userId}}"
+              ]
             },
             "description": "Actualiza la contraseña del usuario autenticado. Solo el dueño puede cambiarla (`verifyOwnership`). La nueva contraseña no puede ser igual a la anterior."
           },
@@ -242,7 +390,6 @@
         }
       ]
     },
-
     {
       "name": "🔑 User · Profile",
       "description": "Consulta y edición del perfil propio. Requiere JWT con rol user + verifyOwnership.",
@@ -253,8 +400,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
             },
             "description": "Obtiene el perfil del usuario autenticado. Solo puede ver su propio perfil (`verifyOwnership`)."
           },
@@ -266,10 +418,16 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}", "orders"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "orders"
+              ]
             },
-            "description": "Devuelve todas las órdenes del usuario autenticado. Solo puede ver sus propias órdenes (`verifyOwnership`)."
+            "description": "Devuelve todas las órdenes del usuario autenticado. Incluye `order_number`, `billing_details`, `user_email`, `payment_method` y `meta.totalItems`. Solo puede ver sus propias órdenes (`verifyOwnership`)."
           },
           "response": [],
           "event": [
@@ -297,16 +455,30 @@
           "name": "Actualizar datos personales",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"NuevoNombre\",\n  \"lastName\": \"NuevoApellido\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
             },
             "description": "Actualiza name, lastName y/o email del usuario. También puede cambiar contraseña enviando `password` y `confirmPassword`. Solo el dueño puede editarse (`verifyOwnership`)."
           },
@@ -314,7 +486,6 @@
         }
       ]
     },
-
     {
       "name": "🔑 User · Orders",
       "description": "Gestión de órdenes propias. Requiere JWT con rol user.",
@@ -325,10 +496,15 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/orders/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "{{orderId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
             },
-            "description": "Obtiene una orden por ID. Solo el dueño puede verla (`verifyOrderOwnership`). Rol user."
+            "description": "Obtiene una orden por ID. La respuesta incluye `order_number`, `billing_details`, `user_email` y `payment_method`. Solo el dueño puede verla (`verifyOrderOwnership`). Rol user."
           },
           "response": []
         },
@@ -338,10 +514,16 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/orders/{{orderId}}/items",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "{{orderId}}", "items"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "items"
+              ]
             },
-            "description": "Devuelve los OrderItems de una orden. Solo el dueño puede acceder (`verifyOrderOwnership`). Rol user."
+            "description": "Devuelve los OrderItems de una orden. Cada item incluye `product_name` (snapshot del nombre del producto al momento de la compra), `createdAt` y `updatedAt`. Solo el dueño puede acceder (`verifyOrderOwnership`). Rol user."
           },
           "response": [],
           "event": [
@@ -366,18 +548,32 @@
           "name": "Crear orden con items",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"{{productId}}\",\n      \"quantity\": 2\n    }\n  ]\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"{{productId}}\",\n      \"quantity\": 2,\n      \"name\": \"Camiseta STEEL\"\n    }\n  ],\n  \"billing_details\": {\n    \"address\": \"Av. Corrientes 1234\",\n    \"city\": \"Buenos Aires\",\n    \"postal_code\": \"C1043AAZ\",\n    \"phone\": \"+5491155551234\"\n  },\n  \"payment_method\": \"cash\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/orders/",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", ""]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                ""
+              ]
             },
-            "description": "Crea una nueva orden. El servidor valida los productos, calcula sub_totals y total en una transacción atómica. Solo rol user."
+            "description": "Crea una nueva orden. El servidor valida los productos, calcula sub_totals y total en una transacción atómica. Genera un `order_number` legible automáticamente (ej. `ord_A3B5K9`). El `user_email` se toma del token del usuario autenticado. Acepta `billing_details` (JSONB) y `payment_method` (cash/card/virtual_wallet). Solo rol user."
           },
           "response": [],
           "event": [
@@ -391,6 +587,7 @@
                   "    pm.test('Orden creada correctamente', () => {",
                   "        pm.expect(response.status).to.equal('success');",
                   "        pm.expect(response.data.order).to.have.property('id');",
+                  "        pm.expect(response.data.order).to.have.property('order_number');",
                   "        pm.expect(response.data.items).to.be.an('array');",
                   "    });",
                   "}"
@@ -402,7 +599,6 @@
         }
       ]
     },
-
     {
       "name": "🛡️ Admin · Users",
       "description": "Administración de usuarios. Requiere JWT con rol admin.",
@@ -413,8 +609,13 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/users/",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", ""]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                ""
+              ]
             },
             "description": "Lista todos los usuarios del sistema. Requiere rol admin."
           },
@@ -424,16 +625,31 @@
           "name": "[Admin] Asignar rol a usuario",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"role\": \"admin\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}/role",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}", "role"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "role"
+              ]
             },
             "description": "Agrega un rol al array `roles` del usuario. Ejemplo: asignar `\"admin\"` a `[\"user\"]` → `[\"user\", \"admin\"]`. Requiere rol admin."
           },
@@ -443,16 +659,31 @@
           "name": "[Admin] Revocar rol de usuario",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"role\": \"admin\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}/revoke-role",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}", "revoke-role"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}",
+                "revoke-role"
+              ]
             },
             "description": "Elimina un rol del array `roles` del usuario. Ejemplo: revocar `\"admin\"` de `[\"user\", \"admin\"]` → `[\"user\"]`. Requiere rol admin."
           },
@@ -464,8 +695,13 @@
             "method": "DELETE",
             "url": {
               "raw": "{{baseUrl}}/users/{{userId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["users", "{{userId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userId}}"
+              ]
             },
             "description": "Elimina una cuenta de usuario del sistema. Requiere rol admin."
           },
@@ -473,7 +709,6 @@
         }
       ]
     },
-
     {
       "name": "🛡️ Admin · Products",
       "description": "Administración del catálogo de productos. Requiere JWT con rol admin.",
@@ -485,13 +720,45 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "name", "value": "Camiseta STEEL Premium", "type": "text" },
-                { "key": "price", "value": "4999.99", "type": "text" },
-                { "key": "stock", "value": "25", "type": "text" },
-                { "key": "description", "value": "Camiseta premium de algodón peinado con logo bordado", "type": "text" },
-                { "key": "category", "value": "camisetas", "type": "text" },
-                { "key": "discount", "value": "false", "type": "text" },
-                { "key": "featured", "value": "true", "type": "text" },
+                {
+                  "key": "name",
+                  "value": "Camiseta STEEL Premium",
+                  "type": "text"
+                },
+                {
+                  "key": "price",
+                  "value": "4999.99",
+                  "type": "text"
+                },
+                {
+                  "key": "stock",
+                  "value": "25",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Camiseta premium de algodón peinado con logo bordado",
+                  "type": "text",
+                  "description": "(Opcional) Mín. 10 caracteres"
+                },
+                {
+                  "key": "category",
+                  "value": "camisetas",
+                  "type": "text",
+                  "description": "(Opcional) Mín. 3 caracteres"
+                },
+                {
+                  "key": "discount",
+                  "value": "false",
+                  "type": "text",
+                  "description": "(Opcional) default: false"
+                },
+                {
+                  "key": "featured",
+                  "value": "true",
+                  "type": "text",
+                  "description": "(Opcional) default: false"
+                },
                 {
                   "key": "image",
                   "type": "file",
@@ -502,10 +769,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/products/",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", ""]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                ""
+              ]
             },
-            "description": "Crea un nuevo producto. Enviar como form-data con la imagen adjunta. La imagen se sube automáticamente a Cloudinary. Flujo: parseFormData → validateSchema → uploadToCloudinary → controller. Requiere rol admin."
+            "description": "Crea un nuevo producto. Enviar como form-data con la imagen adjunta. La imagen se sube automáticamente a Cloudinary. Se genera un `slug` SEO-friendly automáticamente a partir del nombre. Los campos `description` y `category` son opcionales. Flujo: parseFormData → validateSchema → uploadToCloudinary → controller. Requiere rol admin."
           },
           "response": [],
           "event": [
@@ -519,6 +791,7 @@
                   "    pm.test('Producto creado correctamente', () => {",
                   "        pm.expect(response.status).to.equal('success');",
                   "        pm.expect(response.data.product).to.have.property('id');",
+                  "        pm.expect(response.data.product).to.have.property('slug');",
                   "    });",
                   "}"
                 ],
@@ -534,8 +807,16 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "price", "value": "5499.99", "type": "text" },
-                { "key": "featured", "value": "true", "type": "text" },
+                {
+                  "key": "price",
+                  "value": "5499.99",
+                  "type": "text"
+                },
+                {
+                  "key": "featured",
+                  "value": "true",
+                  "type": "text"
+                },
                 {
                   "key": "image",
                   "type": "file",
@@ -546,10 +827,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/products/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
             },
-            "description": "Actualiza un producto existente. Solo se cambian los campos enviados. Puede incluir una nueva imagen. Requiere rol admin."
+            "description": "Actualiza un producto existente. Solo se cambian los campos enviados. Si se cambia el `name`, el `slug` se regenera automáticamente. Puede incluir una nueva imagen. Requiere rol admin."
           },
           "response": []
         },
@@ -559,8 +845,13 @@
             "method": "DELETE",
             "url": {
               "raw": "{{baseUrl}}/products/{{productId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "{{productId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
             },
             "description": "Elimina un producto del catálogo. Requiere rol admin."
           },
@@ -568,7 +859,6 @@
         }
       ]
     },
-
     {
       "name": "🛡️ Admin · Orders",
       "description": "Administración de todas las órdenes del sistema. Requiere JWT con rol admin.",
@@ -579,10 +869,34 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/orders/",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", ""]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                ""
+              ]
             },
-            "description": "Lista todas las órdenes del sistema. Requiere rol admin."
+            "description": "Lista todas las órdenes del sistema. Incluye `order_number`, `billing_details`, `user_email`, `payment_method` y `meta.totalItems`. Requiere rol admin."
+          },
+          "response": []
+        },
+        {
+          "name": "[Admin] Obtener orden por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/admin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "admin"
+              ]
+            },
+            "description": "Obtiene cualquier orden del sistema por su ID. A diferencia del endpoint de usuario (`GET /orders/:id`), no valida ownership. Requiere rol admin."
           },
           "response": []
         },
@@ -590,16 +904,30 @@
           "name": "[Admin] Actualizar orden",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"state\": \"ready\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/orders/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "{{orderId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
             },
             "description": "Actualiza el estado (`state`) y/o el total de una orden. Enviá al menos un campo. Requiere rol admin."
           },
@@ -611,8 +939,13 @@
             "method": "DELETE",
             "url": {
               "raw": "{{baseUrl}}/orders/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "{{orderId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
             },
             "description": "Elimina una orden del sistema. Requiere rol admin."
           },
@@ -620,6 +953,5 @@
         }
       ]
     }
-
   ]
 }

@@ -1,4 +1,4 @@
-import { getAllProducts, getProductById, createProduct, deleteProduct, updateProduct } from "../services/productService.js";
+import { getAllProducts, getProductById, getProductBySlug, createProduct, deleteProduct, updateProduct } from "../services/productService.js";
 import catchAsync from '../utils/catchAsync.js';
 import AppError from '../utils/AppError.js';
 
@@ -19,6 +19,18 @@ export const getProductByIdController = catchAsync(async (req, res) => {
     const { id } = req.params;
 
     const product = await getProductById(id);
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Producto obtenido correctamente',
+        data: { product }
+    });
+});
+
+export const getProductBySlugController = catchAsync(async (req, res) => {
+    const { slug } = req.params;
+
+    const product = await getProductBySlug(slug);
 
     res.status(200).json({
         status: 'success',

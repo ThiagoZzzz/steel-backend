@@ -8,6 +8,18 @@ export const getAllProducts = async () => {
     });
 }
 
+// publico para el detalle
+export const getProductBySlug = async (slug) => {
+    if (!slug) throw new AppError('El slug es obligatorio', 400);
+
+    const product = await Product.findOne({ where: { slug }, raw: true });
+
+    if (!product) throw new AppError('Producto no encontrado', 404);
+
+    return product;
+}
+
+// uso interno
 export const getProductById = async (id) => {
     if (!id) {
         throw new AppError('El id es obligatorio', 400);
