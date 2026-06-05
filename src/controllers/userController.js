@@ -55,7 +55,7 @@ export const updateUserController = catchAsync(async (req, res) => {
     let updateData = {};
 
     if (name !== undefined) updateData.name = name;
-    if (lastName !== undefined) updateData.lastName = lastName;
+    if (lastName !== undefined) updateData.last_name = lastName;
     if (email !== undefined) updateData.email = email;
 
     // 3. Le pasamos ese objeto limpio al servicio
