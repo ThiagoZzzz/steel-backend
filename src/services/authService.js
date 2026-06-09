@@ -73,7 +73,7 @@ export const updateUserPassword = async (id, password) => {
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (isMatch) {
-    throw new AppError('La contraseña es la misma que la anterior', 400);
+    throw new AppError('La contraseña debe ser diferente a la actual', 400);
   }
 
   const hashedPassword = await hashPassword(password);
