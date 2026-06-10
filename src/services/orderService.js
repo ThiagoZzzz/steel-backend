@@ -1,4 +1,4 @@
-import { sequelize, Order, OrderItem, Product } from "../models/index.js";
+import { sequelize, Order, OrderItem, Product, User } from "../models/index.js";
 import AppError from '../utils/AppError.js';
 
 export const getAllOrders = async () => {
@@ -48,20 +48,21 @@ export const getOrderItems = async (id) => {
 }
 
 // Crea la orden completa dentro de una transacción: calcula sub_total por item y total de la orden, persiste Order + OrderItems de forma atómica
-export const createFullOrder = async ({ user_id, user_email, items, billing_details }) => {
+export const createFullOrder = async ({ id: user_id, items, billing_details }) => {
     return await sequelize.transaction(async (t) => {
 
         // Resolver precios y calcular sub_totals en paralelo
         const resolvedItems = await Promise.all(
-            items.map(async ({ product_id, quantity, name }) => {
-                const product = await Product.findByPk(product_id, { transaction: t });
+            items.map(async ({ id, quantity, name }) => {
+                const product = await Product.findByPk(id, { transaction: t });
 
                 if (!product) {
-                    throw new AppError(`Producto con id "${product_id}" no encontrado.`, 404);
+                    throw new AppError(`Producto con id "${id}" no encontrado.`, 404);
                 }
 
+
                 return {
-                    product_id,
+                    product_id: id,
                     product_name: name,
                     quantity,
                     sub_total: product.price * quantity
@@ -72,8 +73,11 @@ export const createFullOrder = async ({ user_id, user_email, items, billing_deta
         // Sumar todos los sub_totals para obtener el total de la orden
         const total = resolvedItems.reduce((acc, item) => acc + item.sub_total, 0);
 
-        // Crear la orden
-        const newOrder = await Order.create({ ...billing_details, total, user_id, user_email }, { transaction: t });
+        const user = await User.findByPk(user_id);
+        // limipamos el billing details para no guardar el metodo de pago dos veces
+        const { paymentMethod, ...billing_details_rest } = billing_details;
+        // Crear la orden 
+        const newOrder = await Order.create({ billing_details: billing_details_rest, total, user_id, user_email: user.email, payment_method: paymentMethod }, { transaction: t });
 
         // Crear los items asociados a la orden
         const newItems = await OrderItem.bulkCreate(

@@ -2,19 +2,28 @@ import { z } from 'zod';
 
 // Schema para cada item del pedido que envía el cliente
 const orderItemSchema = z.object({
-    product_id: z
-        .string({ required_error: 'El product_id es obligatorio' }),
+    id: z
+        .string({ required_error: 'El id del producto es obligatorio' }),
     quantity: z
         .number({ required_error: 'La cantidad es obligatoria' })
         .int('La cantidad debe ser un número entero')
         .min(1, 'La cantidad debe ser al menos 1')
 });
 
-// El cliente solo envía los items; el servicio resuelve precios y calcula totales
+// El cliente envía items + billing_details; el servicio resuelve precios y calcula totales
 export const createOrderSchema = z.object({
     items: z
         .array(orderItemSchema, { required_error: 'El campo items es obligatorio' })
-        .min(1, 'La orden debe contener al menos un item')
+        .min(1, 'La orden debe contener al menos un item'),
+    billing_details: z.object({
+        name: z.string().min(1),
+        lastName: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().min(1),
+        address: z.string().min(1),
+        city: z.string().min(1),
+        postalCode: z.string().min(1),
+    })
 });
 
 // Al actualizar una orden solo se pueden modificar total y/o state

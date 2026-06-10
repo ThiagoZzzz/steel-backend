@@ -60,7 +60,7 @@ export const getOrderItemsController = catchAsync(async (req, res) => {
 });
 
 export const createOrderController = catchAsync(async (req, res) => {
-  const { items } = req.body;
+  const { items, billing_details } = req.body;
 
   if (!items || items.length === 0) {
     return res.status(400).json({
@@ -69,12 +69,11 @@ export const createOrderController = catchAsync(async (req, res) => {
     });
   }
 
-  const user_id = req.user.id;
-  const user_email = req.user.email;
+  const { id } = req.user;
 
   // El servicio resuelve precios desde la DB, calcula sub_totals y
   // persiste Order + OrderItems dentro de una transacción atómica.
-  const { order, items: newItems } = await createFullOrder({ user_id, user_email, items });
+  const { order, items: newItems } = await createFullOrder({ id, items, billing_details });
 
   return res.status(201).json({
     status: 'success',
