@@ -3,7 +3,10 @@ import AppError from '../utils/AppError.js';
 
 export const getAllOrders = async () => {
     return await Order.findAll({
-        raw: true
+        raw: true,
+        order: [
+            ['created_at', 'DESC']
+        ]
     });
 }
 
@@ -12,6 +15,9 @@ export const getAllUserOrders = async (userId) => {
         where: {
             user_id: userId
         },
+        order: [
+            ['created_at', 'DESC']
+        ],
         raw: true
     });
 }

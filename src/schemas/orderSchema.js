@@ -26,11 +26,20 @@ export const createOrderSchema = z.object({
     })
 });
 
-// Al actualizar una orden solo se pueden modificar total y/o state
+// Al actualizar una orden solo se pueden modificar total, state y/o billing_details
 export const updateOrderSchema = z.object({
     total: z.number().min(0, 'El total debe ser mayor o igual a 0').optional(),
     state: z.enum(['pending', 'ready', 'cancel'], {
         errorMap: () => ({ message: "El estado debe ser 'pending', 'ready' o 'cancel'" })
+    }).optional(),
+    billing_details: z.object({
+        name: z.string().min(1, 'El nombre es obligatorio'),
+        lastName: z.string().min(1, 'El apellido es obligatorio'),
+        email: z.string().email('Email inválido'),
+        phone: z.string().min(1, 'El teléfono es obligatorio'),
+        address: z.string().min(1, 'La dirección es obligatoria'),
+        city: z.string().min(1, 'La ciudad es obligatoria'),
+        postalCode: z.string().min(1, 'El código postal es obligatorio'),
     }).optional()
 }).refine(
     (data) => Object.keys(data).length > 0,

@@ -83,13 +83,14 @@ export const createOrderController = catchAsync(async (req, res) => {
 });
 
 export const updateOrderController = catchAsync(async (req, res) => {
-  const { total, state } = req.body;
+  const { total, state, billing_details } = req.body;
   const { id } = req.params;
 
   // Construimos un objeto solo con los campos que realmente vinieron
   const updateData = {};
   if (total !== undefined) updateData.total = total;
   if (state !== undefined) updateData.state = state;
+  if (billing_details !== undefined) updateData.billing_details = billing_details;
 
   const updatedOrder = await updateOrder(id, updateData);
 
