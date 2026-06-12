@@ -131,7 +131,10 @@ export const getUserOrders = async (id) => {
 
     const orders = await Order.findAll({
         where: { user_id: id },
-        raw: true
+        raw: true,
+        order: [
+            ['created_at', 'DESC']
+        ]
     });
 
     return orders;
