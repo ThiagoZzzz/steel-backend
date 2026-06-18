@@ -1,13 +1,12 @@
 import { sequelize, Order, OrderItem, Product, User } from "../models/index.js";
 import AppError from '../utils/AppError.js';
 
-export const getAllOrders = async () => {
-    return await Order.findAll({
+export const getAllOrders = async (queryOptions = {}) => {
+    const { count, rows } = await Order.findAndCountAll({
+        ...queryOptions,
         raw: true,
-        order: [
-            ['created_at', 'DESC']
-        ]
     });
+    return { orders: rows, total: count };
 }
 
 export const getAllUserOrders = async (userId) => {

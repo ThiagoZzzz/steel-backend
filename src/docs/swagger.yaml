@@ -646,7 +646,52 @@ paths:
     get:
       tags: ["🔓 Público · Products"]
       summary: Listar productos del catálogo
-      description: Devuelve todos los productos disponibles. No requiere autenticación.
+      description: Devuelve todos los productos disponibles con soporte para filtrado, búsqueda, ordenamiento y paginación. No requiere autenticación.
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+          description: "Búsqueda parcial de texto en el nombre del producto (ej. ?search=tubo)."
+        - in: query
+          name: category
+          schema: { type: string }
+          description: "Filtrar por categoría (ej. ?category=acero)."
+        - in: query
+          name: discount
+          schema: { type: boolean }
+          description: "Filtrar por productos con descuento (true/false)."
+        - in: query
+          name: featured
+          schema: { type: boolean }
+          description: "Filtrar por productos destacados (true/false)."
+        - in: query
+          name: price[gte]
+          schema: { type: number }
+          description: "Precio mayor o igual a."
+        - in: query
+          name: price[lte]
+          schema: { type: number }
+          description: "Precio menor o igual a."
+        - in: query
+          name: stock[gte]
+          schema: { type: integer }
+          description: "Stock mayor o igual a."
+        - in: query
+          name: stock[lte]
+          schema: { type: integer }
+          description: "Stock menor o igual a."
+        - in: query
+          name: sort
+          schema: { type: string, example: "-price,name" }
+          description: "Criterio de ordenamiento. Campos: price, stock, name, created_at. Prefijo '-' para DESC."
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+          description: "Número de página."
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 12 }
+          description: "Cantidad de elementos por página."
       responses:
         "200":
           description: Catálogo obtenido correctamente
@@ -1401,9 +1446,38 @@ paths:
     get:
       tags: ["🛡️ Admin · Users"]
       summary: Listar todos los usuarios
-      description: Devuelve la lista completa de usuarios. **Solo administradores.**
+      description: Devuelve la lista completa de usuarios con soporte para filtrado, ordenamiento y paginación. **Solo administradores.**
       security:
         - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+          description: "Búsqueda parcial en nombre, apellido y email (ej. ?search=juan)."
+        - in: query
+          name: name
+          schema: { type: string }
+          description: "Filtrar por nombre exacto."
+        - in: query
+          name: last_name
+          schema: { type: string }
+          description: "Filtrar por apellido exacto."
+        - in: query
+          name: email
+          schema: { type: string }
+          description: "Filtrar por email exacto."
+        - in: query
+          name: sort
+          schema: { type: string, example: "-created_at" }
+          description: "Criterio de ordenamiento. Campos: name, last_name, email, created_at. Prefijo '-' para DESC."
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+          description: "Número de página."
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+          description: "Cantidad de elementos por página."
       responses:
         "200":
           description: Listado obtenido correctamente
@@ -1541,12 +1615,49 @@ paths:
       tags: ["🛡️ Admin · Orders"]
       summary: Listar todas las órdenes
       description: |
-        Devuelve todas las órdenes del sistema. **Solo administradores.**
+        Devuelve todas las órdenes del sistema con soporte para filtrado, ordenamiento y paginación. **Solo administradores.**
         > ⚠️ La ruta real en el servidor es `GET /orders/` — este path es solo para
         > documentación ya que Swagger no puede separar `GET /orders/` (admin) de
         > `POST /orders/` (user) en grupos distintos.
       security:
         - BearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+          description: "Búsqueda parcial en email del usuario o número de orden."
+        - in: query
+          name: user_email
+          schema: { type: string }
+          description: "Filtrar por email del usuario."
+        - in: query
+          name: payment_method
+          schema: { type: string }
+          description: "Filtrar por método de pago."
+        - in: query
+          name: state
+          schema: { type: string }
+          description: "Filtrar por estado de la orden."
+        - in: query
+          name: total[gte]
+          schema: { type: number }
+          description: "Total mayor o igual a."
+        - in: query
+          name: total[lte]
+          schema: { type: number }
+          description: "Total menor o igual a."
+        - in: query
+          name: sort
+          schema: { type: string, example: "-created_at" }
+          description: "Criterio de ordenamiento. Campos: total, created_at. Prefijo '-' para DESC."
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+          description: "Número de página."
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+          description: "Cantidad de elementos por página."
       responses:
         "200":
           description: Listado de órdenes obtenido correctamente

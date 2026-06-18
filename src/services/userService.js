@@ -1,13 +1,13 @@
 import { User, Order } from '../models/index.js';
 import AppError from '../utils/AppError.js';
 
-export const getAllUsers = async () => {
-    const users = await User.findAll({
+export const getAllUsers = async (queryOptions = {}) => {
+    const { count, rows } = await User.findAndCountAll({
+        ...queryOptions,
         attributes: { exclude: ['password'] },
-        raw: true
+        raw: true,
     });
-
-    return users;
+    return { users: rows, total: count };
 }
 
 export const getUserById = async (id) => {

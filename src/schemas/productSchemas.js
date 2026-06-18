@@ -1,7 +1,13 @@
 import { z } from 'zod';
 
-// helper
+// helpers
 const emptyToUndefined = (val) => (val === '' || val === null ? undefined : val);
+
+const stringToBoolean = (val) => {
+    if (val === 'true' || val === true) return true;
+    if (val === 'false' || val === false) return false;
+    return emptyToUndefined(val);
+};
 
 // z.coerce convierte automáticamente los strings que llegan de multipart/form-data al tipo de dato esperado en la db
 export const createProductSchema = z.object({
@@ -17,12 +23,12 @@ export const createProductSchema = z.object({
         z.string().min(3, 'La categoría debe tener al menos 3 caracteres').nullish(),
     ),
     discount: z.preprocess(
-        emptyToUndefined,
-        z.coerce.boolean().optional(),
+        stringToBoolean,
+        z.boolean().optional(),
     ),
     featured: z.preprocess(
-        emptyToUndefined,
-        z.coerce.boolean().optional(),
+        stringToBoolean,
+        z.boolean().optional(),
     ),
 });
 

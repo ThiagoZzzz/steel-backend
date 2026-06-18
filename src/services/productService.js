@@ -2,10 +2,12 @@ import AppError from '../utils/AppError.js';
 import { Product } from "../models/index.js";
 import { deleteFromCloudinary } from "../utils/deleteFromCloudinary.js";
 
-export const getAllProducts = async () => {
-    return await Product.findAll({
-        raw: true
+export const getAllProducts = async (queryOptions = {}) => {
+    const { count, rows } = await Product.findAndCountAll({
+        ...queryOptions,
+        raw: true,
     });
+    return { products: rows, total: count };
 }
 
 // publico para el detalle
@@ -80,6 +82,3 @@ export const deleteProduct = async (id) => {
     await product.destroy();
     return product;
 }
-
-// manejar el discount y featured
-// update status

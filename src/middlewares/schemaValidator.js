@@ -3,11 +3,10 @@ import AppError from '../utils/AppError.js';
 
 export const validateSchema = (schema) => {
   return (req, res, next) => {
-    console.log(req.body);
 
     try {
       // Intenta forzar el req.body a encajar en el molde (schema)
-      schema.parse(req.body);
+      req.body = schema.parse(req.body);
 
       next();
     } catch (error) {

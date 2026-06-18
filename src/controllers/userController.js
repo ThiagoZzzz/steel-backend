@@ -8,17 +8,30 @@ import {
     getUserOrders
 } from '../services/userService.js';
 import catchAsync from '../utils/catchAsync.js';
+import ApiQueryFeature, { USER_CONFIG } from '../utils/ApiQueryFeatures.js';
 
-// TODO implementar filtros y paginación
 export const getAllUsersController = catchAsync(async (req, res) => {
-    const users = await getAllUsers();
+    const queryOptions = new ApiQueryFeature(req.query, USER_CONFIG)
+        .filter()
+        .search()
+        .sort()
+        .paginate()
+        .build();
+
+    const { users, total } = await getAllUsers(queryOptions);
+
+    const page  = Math.max(parseInt(req.query.page)  || 1, 1);
+    const limit = Math.min(parseInt(req.query.limit) || USER_CONFIG.defaultLimit, 100);
 
     res.status(200).json({
         status: 'success',
         message: 'Listado de usuarios obtenido correctamente',
         data: { users },
         meta: {
-            totalItems: users.length
+            total,
+            totalPages: Math.ceil(total / limit),
+            currentPage: page,
+            limit,
         }
     });
 });

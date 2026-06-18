@@ -1,7 +1,5 @@
-import { meta } from 'zod/v4/core';
 import {
   getAllOrders,
-  getAllUserOrders,
   getOrderById,
   getOrderItems,
   createFullOrder,
@@ -9,16 +7,30 @@ import {
   deleteOrder
 } from '../services/orderService.js';
 import catchAsync from '../utils/catchAsync.js';
+import ApiQueryFeature, { ORDER_CONFIG } from '../utils/ApiQueryFeatures.js';
 
 export const getAllOrdersController = catchAsync(async (req, res) => {
-  const orders = await getAllOrders();
+  const queryOptions = new ApiQueryFeature(req.query, ORDER_CONFIG)
+    .filter()
+    .sort()
+    .paginate()
+    .search()
+    .build();
+
+  const { orders, total } = await getAllOrders(queryOptions);
+
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = Math.min(parseInt(req.query.limit) || ORDER_CONFIG.defaultLimit, 100);
 
   return res.status(200).json({
     status: 'success',
     message: 'Listado de órdenes obtenido correctamente',
     data: { orders },
     meta: {
-      totalItems: orders.length
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      limit,
     }
   });
 });
