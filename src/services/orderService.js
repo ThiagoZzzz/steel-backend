@@ -58,17 +58,25 @@ export const createFullOrder = async ({ id: user_id, items, billing_details }) =
 
         // Resolver precios y calcular sub_totals en paralelo
         const resolvedItems = await Promise.all(
-            items.map(async ({ id, quantity, name }) => {
+            items.map(async ({ id, quantity }) => {
                 const product = await Product.findByPk(id, { transaction: t });
+
 
                 if (!product) {
                     throw new AppError(`Producto con id "${id}" no encontrado.`, 404);
                 }
+                if (product.stock === 0) {
+                    throw new AppError(`Producto sin stock.`, 400);
+                }
+                if (product.stock < quantity) {
+                    throw new AppError(`Producto con id "${id}" no tiene stock suficiente.`, 400);
+                }
 
+                await product.update({ stock: product.stock - quantity }, { transaction: t });
 
                 return {
                     product_id: id,
-                    product_name: name,
+                    product_name: product.name,
                     quantity,
                     sub_total: product.price * quantity
                 };

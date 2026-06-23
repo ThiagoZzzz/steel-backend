@@ -28,12 +28,12 @@ const app = express();
 // setear valores de desarrollo
 const HOST = process.env.HOST || 'http://localhost';
 const PORT = process.env.PORT || 3000;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 // cors
 app.use(
     cors({
-        origin: FRONTEND_URL,
+        origin: [FRONTEND_URL, 'http://localhost:5173', 'http://localhost:8000'],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
     })

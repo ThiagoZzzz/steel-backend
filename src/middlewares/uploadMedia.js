@@ -22,9 +22,11 @@ export const uploadToCloudinary = (req, res, next) => {
     // Si no hay archivo (ej: en un PATCH sin imagen nueva), seguimos sin problema
     if (!req.file) return next();
 
+    const targetFolder = process.env.CLOUDINARY_FOLDER;
+
     const stream = cloudinary.v2.uploader.upload_stream(
         {
-            folder: 'steel_react_uploads',
+            folder: targetFolder,
             allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
         },
         (error, result) => {
