@@ -66,10 +66,10 @@ export const createFullOrder = async ({ id: user_id, items, billing_details }) =
                     throw new AppError(`Producto con id "${id}" no encontrado.`, 404);
                 }
                 if (product.stock === 0) {
-                    throw new AppError(`Producto sin stock.`, 400);
+                    throw new AppError(`El producto "${product.name}" está agotado, sin stock.`, 400);
                 }
                 if (product.stock < quantity) {
-                    throw new AppError(`Producto con id "${id}" no tiene stock suficiente.`, 400);
+                    throw new AppError(`El producto "${product.name}" no tiene stock suficiente.`, 400);
                 }
 
                 await product.update({ stock: product.stock - quantity }, { transaction: t });
