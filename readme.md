@@ -1,20 +1,18 @@
-# STEEL  - REACT
+# STEEL - WEB
 
-Este repositorio contiene el proyecto final/entregable realizado para el curso de Desarrollo Web NUCBA, respectivo al módulo de Backend. En esta iteración se implementó una base de datos y su API para acceder a la información de productos, usuarios y órdenes. 
+Este repositorio contiene el proyecto final/entregable realizado para el curso de Desarrollo Web NUCBA, respectivo al módulo de Backend. En esta iteración se implementó una base de datos y su API para acceder a la información de productos, usuarios y ordenes. 
 
 * Autenticación.
 * Autorización.
 * CRUD de productos.
 * CRUD de usuarios.
-* CRUD de órdenes.
-
-🔗 **[API URL]()**
+* CRUD de ordenes.
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
 
-* **Backend:** Node.js con Express, PostgreSQL.
+* **Backend:** Node.js con Express + base de datos PostgreSQL.
     * JWT.
     * Bcrypt.
     * Multer.
@@ -23,7 +21,9 @@ Este repositorio contiene el proyecto final/entregable realizado para el curso d
     * Zod.
 
 * **Despliegue:** .
-
+    * Railway.
+    * Neon.
+    * Docker.
 ---
 
 ## ✨ Características Principales
