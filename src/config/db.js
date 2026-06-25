@@ -17,6 +17,14 @@ const port = urlParams.port;
 const dbName = urlParams.pathname.substring(1);
 const schema = urlParams.searchParams.get('schema') || 'public';
 
+// config, ssl required for production
+const sslConfig = {
+  ssl: {
+    require: true,
+    rejectUnauthorized: false,
+  },
+};
+
 console.log('Conectando a PostgreSQL...', {
   host,
   port,
@@ -30,12 +38,7 @@ const sequelize = new Sequelize(dbName, username, password, {
   host: host,
   port: port,
   dialect: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false,
-    },
-  },
+  dialectOptions: process.env.NODE_ENV === 'production' ? sslConfig : {},
   logging: false, // Deshabilitar logging de SQL
 });
 

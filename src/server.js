@@ -92,9 +92,10 @@ const startServer = async () => {
 
             if (process.env.NODE_ENV === 'development') {
                 console.log(`Server running on ${HOST}:${PORT}`);
+            } else {
+                console.log('Server running')
             }
 
-            console.log('Server running')
         });
 
         server.timeout = 30000;
