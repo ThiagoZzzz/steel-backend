@@ -23,6 +23,9 @@ export const createOrderSchema = z.object({
         address: z.string().min(1),
         city: z.string().min(1),
         postalCode: z.string().min(1),
+        paymentMethod: z.enum(['cash', 'card', 'virtual_wallet'], {
+            errorMap: () => ({ message: "El método de pago debe ser 'cash', 'card' o 'virtual_wallet'" })
+        }),
     })
 });
 
