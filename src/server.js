@@ -89,7 +89,12 @@ const startServer = async () => {
         await sequelize.sync({ force: false });
 
         const server = app.listen(PORT, () => {
-            console.log(`Server running on ${HOST}:${PORT}`);
+
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`Server running on ${HOST}:${PORT}`);
+            }
+
+            console.log('Server running')
         });
 
         server.timeout = 30000;
