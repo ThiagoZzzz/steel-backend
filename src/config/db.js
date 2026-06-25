@@ -31,7 +31,10 @@ const sequelize = new Sequelize(dbName, username, password, {
   port: port,
   dialect: 'postgres',
   dialectOptions: {
-    // Opciones adicionales si son necesarias
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
   },
   logging: false, // Deshabilitar logging de SQL
 });
